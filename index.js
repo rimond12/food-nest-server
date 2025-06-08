@@ -59,6 +59,11 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/requestedFoods", async(req, res) =>{
+      const result = await reqfoodCollection.find().toArray();
+      res.send(result);
+    })
+
     app.post("/requestedFoods", async (req, res) => {
       const requestFood = req.body;
       const result = await reqfoodCollection.insertOne(requestFood);
