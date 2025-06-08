@@ -25,6 +25,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const foodCollection = client.db("foodNest").collection("foods");
+    const reqfoodCollection = client.db("foodNest").collection("requestedFood");
 
     app.get("/availableFoods", async (req, res) => {
       const result = await foodCollection
@@ -33,11 +34,11 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/availableFoods/:id", async(req, res) =>{
+    app.get("/availableFoods/:id", async (req, res) => {
       const id = req.params.id;
-      const food = await foodCollection.findOne({_id: new ObjectId(id)});
+      const food = await foodCollection.findOne({ _id: new ObjectId(id) });
       res.send(food);
-    })
+    });
 
     app.get("/featureFoods", async (req, res) => {
       const pipeline = [
@@ -55,6 +56,22 @@ async function run() {
       ];
 
       const result = await foodCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
+
+    app.post("/requestedFoods", async (req, res) => {
+      const requestFood = req.body;
+      const result = await reqfoodCollection.insertOne(requestFood);
+      res.send(result);
+    });
+
+    app.patch("/availableFoods/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateStatus = req.body.status;
+      const result = await foodCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { status: updateStatus } }
+      );
       res.send(result);
     });
 
