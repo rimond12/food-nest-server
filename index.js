@@ -59,14 +59,39 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/requestedFoods", async(req, res) =>{
+    app.get("/requestedFoods", async (req, res) => {
       const result = await reqfoodCollection.find().toArray();
       res.send(result);
-    })
+    });
 
     app.post("/requestedFoods", async (req, res) => {
       const requestFood = req.body;
       const result = await reqfoodCollection.insertOne(requestFood);
+      res.send(result);
+    });
+
+    app.get("/requestedFoods/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = {
+        user_email: email,
+      };
+
+      if (!email) {
+        return res.status(400).send({ message: "email is required" });
+      }
+      const result = await reqfoodCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/allFoods/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = {
+        donor_email: email,
+      };
+      if (!email) {
+        return res.status(400).send({ message: "email is required" });
+      }
+      const result = await foodCollection.find(query).toArray();
       res.send(result);
     });
 
