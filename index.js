@@ -64,6 +64,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/allFoods/:id", async(req, res) =>{
+      const id = req.params.id;
+      const result = await foodCollection.findOne({ _id: new ObjectId(id) })
+      res.send(result);
+    })
+
     app.post("/requestedFoods", async (req, res) => {
       const requestFood = req.body;
       const result = await reqfoodCollection.insertOne(requestFood);
@@ -112,6 +118,28 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/allFoods/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedFoods = req.body;
+      const updatedDoc = {
+        $set: updatedFoods,
+      };
+      const result = await foodCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    app.delete("/allFoods/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodCollection.deleteOne(query);
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
