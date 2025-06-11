@@ -64,11 +64,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/allFoods/:id", async(req, res) =>{
+    app.get("/allFoods/:id", async (req, res) => {
       const id = req.params.id;
-      const result = await foodCollection.findOne({ _id: new ObjectId(id) })
+
+      const result = await foodCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
-    })
+    });
 
     app.post("/requestedFoods", async (req, res) => {
       const requestFood = req.body;
@@ -89,7 +90,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/allFoods/:email", async (req, res) => {
+    app.get("/allFoodsByEmail/:email", async (req, res) => {
       const email = req.params.email;
       const query = {
         donor_email: email,
