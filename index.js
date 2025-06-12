@@ -2,6 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+
+const admin = require("firebase-admin");
+const serviceAccount = require("./firebase-admin-service-key.json");
+
 require("dotenv").config();
 const port = process.env.PORT || 3000;
 
@@ -19,6 +23,36 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const verifyFireBaseToken = async (req, res, next) => {
+  const authHeader = req.headers?.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    console.log("decoded token", decoded);
+    req.decoded = decoded;
+    next();
+  } catch (error) {
+    res.status(401).send({ message: "unauthorized access" });
+  }
+};
+
+const verifyTokenEmail = async (req, res, next) => {
+  if (req.params.email !== req.decoded.email) {
+    return res.status(403).send({ message: "forbidden access" });
+  }
+  next();
+};
 
 async function run() {
   try {
@@ -77,30 +111,45 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/requestedFoods/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = {
-        user_email: email,
-      };
+    app.get(
+      "/requestedFoods/:email",
+      verifyFireBaseToken,
+      verifyTokenEmail,
+      async (req, res) => {
+        const email = req.params.email;
+        // console.log("req header", req.headers);
+        // if (email !== req.decoded.email) {
+        //   return res.status(403).message({ message: "forbidden access" });
+        // }
 
-      if (!email) {
-        return res.status(400).send({ message: "email is required" });
-      }
-      const result = await reqfoodCollection.find(query).toArray();
-      res.send(result);
-    });
+        const query = {
+          user_email: email,
+        };
 
-    app.get("/allFoodsByEmail/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = {
-        donor_email: email,
-      };
-      if (!email) {
-        return res.status(400).send({ message: "email is required" });
+        if (!email) {
+          return res.status(400).send({ message: "email is required" });
+        }
+        const result = await reqfoodCollection.find(query).toArray();
+        res.send(result);
       }
-      const result = await foodCollection.find(query).toArray();
-      res.send(result);
-    });
+    );
+
+    app.get(
+      "/allFoodsByEmail/:email",
+      verifyFireBaseToken,
+      verifyTokenEmail,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = {
+          donor_email: email,
+        };
+        if (!email) {
+          return res.status(400).send({ message: "email is required" });
+        }
+        const result = await foodCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     app.patch("/availableFoods/:id", async (req, res) => {
       const id = req.params.id;
@@ -112,10 +161,16 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/foods", async (req, res) => {
+    app.post("/foods", verifyFireBaseToken, async (req, res) => {
       const newFood = req.body;
+      const userEmail = req.decoded.email;
+      console.log(userEmail);
+
       console.log(newFood);
-      const result = await foodCollection.insertOne(newFood);
+      const result = await foodCollection.insertOne({
+        ...newFood,
+        user_email: userEmail,
+      });
       res.send(result);
     });
 
