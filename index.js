@@ -4,14 +4,12 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
-
 const admin = require("firebase-admin");
 
-const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString(
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
   "utf8"
 );
 const serviceAccount = JSON.parse(decoded);
-
 
 const port = process.env.PORT || 3000;
 
@@ -63,7 +61,7 @@ const verifyTokenEmail = async (req, res, next) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const foodCollection = client.db("foodNest").collection("foods");
     const reqfoodCollection = client.db("foodNest").collection("requestedFood");
 
@@ -123,10 +121,6 @@ async function run() {
       verifyTokenEmail,
       async (req, res) => {
         const email = req.params.email;
-        // console.log("req header", req.headers);
-        // if (email !== req.decoded.email) {
-        //   return res.status(403).message({ message: "forbidden access" });
-        // }
 
         const query = {
           user_email: email,
@@ -170,9 +164,6 @@ async function run() {
     app.post("/foods", verifyFireBaseToken, async (req, res) => {
       const newFood = req.body;
       const userEmail = req.decoded.email;
-      console.log(userEmail);
-
-      console.log(newFood);
       const result = await foodCollection.insertOne({
         ...newFood,
         user_email: userEmail,
@@ -203,10 +194,10 @@ async function run() {
       res.send(result);
     });
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
