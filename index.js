@@ -13,7 +13,7 @@ const serviceAccount = JSON.parse(decoded);
 
 const port = process.env.PORT || 3000;
 
-// middleware
+// middlewareee
 app.use(cors());
 app.use(express.json());
 
