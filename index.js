@@ -66,6 +66,7 @@ async function run() {
     const foodCollection = client.db("foodNest").collection("foods");
     const reqfoodCollection = client.db("foodNest").collection("requestedFood");
 
+    
     app.get("/availableFoods", async (req, res) => {
       const result = await foodCollection
         .find({ status: "available" })
